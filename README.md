@@ -78,3 +78,6 @@ Tested with `mcp` SDK 2.2. Not affiliated with Anthropic; "MCP" refers to the op
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+## Hardware
+See [docs/HARDWARE.md](docs/HARDWARE.md) for support tiers and measured numbers.
