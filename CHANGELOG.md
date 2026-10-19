@@ -4,6 +4,7 @@ Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](htt
 
 ## 0.2.5
 - New `sunmcp box`: detects cores/RAM, picks a tier and models (see docs/HARDWARE.md), prints install commands, `--write` creates sunmcp.json.
+- Tiers use physical cores, not threads (found by running on a 4C/8T laptop).
 - Default vision model is now `qwen2.5vl:3b` (7B did not answer on CPU-only hardware).
 
 ## 0.2.4

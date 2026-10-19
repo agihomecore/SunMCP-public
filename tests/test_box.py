@@ -22,3 +22,11 @@ def test_generated_config_parses():
 def test_detect_hardware_sane():
     hw = detect_hardware()
     assert hw.cores >= 1 and hw.ram_gb > 0.5
+
+
+def test_physical_cores_never_exceed_logical():
+    from sunmcp.box import _physical_cores
+    import os
+    n = os.cpu_count() or 1
+    assert 1 <= _physical_cores(n) <= n
+    assert _physical_cores(0) >= 1

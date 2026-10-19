@@ -16,8 +16,9 @@ from typing import Any
 
 @dataclass
 class Hardware:
-    cores: int
+    cores: int  # physical cores (what tiers are based on)
     ram_gb: float
+    threads: int = 0  # logical processors
 
 
 @dataclass
@@ -51,8 +52,39 @@ def _ram_bytes() -> int:
     raise RuntimeError("cannot detect RAM")
 
 
+def _physical_cores(logical: int) -> int:
+    """Physical core count; falls back to the logical count if unknown."""
+    try:
+        if sys.platform == "win32":
+            out = subprocess.check_output(
+                ["powershell", "-NoProfile", "-Command",
+                 "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"],
+                text=True, timeout=20,
+            )
+            return max(1, int(out.strip()))
+        if sys.platform == "darwin":
+            return max(1, int(subprocess.check_output(["sysctl", "-n", "hw.physicalcpu"]).strip()))
+        pairs: set[tuple[str, str]] = set()
+        phys = core = ""
+        with open("/proc/cpuinfo", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("physical id"):
+                    phys = line.split(":")[1].strip()
+                elif line.startswith("core id"):
+                    core = line.split(":")[1].strip()
+                elif not line.strip() and core != "":
+                    pairs.add((phys, core))
+                    phys = core = ""
+        if pairs:
+            return len(pairs)
+    except Exception:
+        pass
+    return logical
+
+
 def detect_hardware() -> Hardware:
-    return Hardware(cores=os.cpu_count() or 1, ram_gb=_ram_bytes() / 1024**3)
+    logical = os.cpu_count() or 1
+    return Hardware(cores=_physical_cores(logical), ram_gb=_ram_bytes() / 1024**3, threads=logical)
 
 
 def choose_tier(hw: Hardware) -> Tier:
@@ -85,7 +117,7 @@ def pull_commands(tier: Tier) -> list[str]:
 
 def report(hw: Hardware, tier: Tier) -> str:
     lines = [
-        f"machine: {hw.cores} cores, {hw.ram_gb:.1f} GB RAM",
+        f"machine: {hw.cores} physical cores ({hw.threads or hw.cores} threads), {hw.ram_gb:.1f} GB RAM",
         f"tier:    {tier.name}",
         f"chat:    {tier.chat}",
         f"vision:  {tier.vision} (on command only)",
