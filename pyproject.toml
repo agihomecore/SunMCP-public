@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sunmcp"
+version = "0.1.0"
+description = "Model-agnostic MCP client: connect any MCP server to Ollama/Qwen, OpenAI or Anthropic from one CLI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "SUN" }]
+keywords = ["mcp", "model-context-protocol", "llm", "ollama", "agent", "cli"]
+dependencies = ["mcp>=2.2,<3", "httpx>=0.27"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+sunmcp = "sunmcp.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sunmcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

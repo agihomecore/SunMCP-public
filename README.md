@@ -1,0 +1,67 @@
+# SunMCP
+
+Model-agnostic **MCP client**. Connect any [MCP](https://modelcontextprotocol.io) server to a **local model (Ollama / Qwen / LM Studio)**, OpenAI, or Anthropic, from one small CLI. Your data stays on your machine when you use a local model.
+
+- Several MCP servers at once (stdio), tools are namespaced as `server__tool`
+- Backends: `ollama`, `lmstudio`, `openai`, `anthropic` (bring your own key)
+- Agent loop with tool-call error recovery and a step limit
+- ~500 lines, no framework, MIT
+
+## Install
+
+```bash
+pip install sunmcp          # after first PyPI release
+# or from source
+git clone <this repo> && cd sunmcp && pip install -e .
+```
+
+## 60 seconds
+
+```bash
+sunmcp init                 # writes sunmcp.json (Ollama + demo server)
+sunmcp tools                # list tools from all configured servers
+sunmcp run "what is 2+3? use the tool"
+sunmcp chat                 # interactive; /reset clears history, /exit quits
+```
+
+`sunmcp.json`:
+
+```json
+{
+  "backend": {"type": "ollama", "model": "qwen2.5:7b"},
+  "system": "Use tools when they help.",
+  "servers": {
+    "demo": {"command": "python", "args": ["examples/demo_server.py"]},
+    "files": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]}
+  }
+}
+```
+
+Cloud backends read the key from an environment variable you name:
+
+```json
+{"backend": {"type": "anthropic", "model": "claude-sonnet-5-5", "api_key_env": "ANTHROPIC_API_KEY"}}
+```
+
+## Use as a library
+
+```python
+from sunmcp import MCPHub, load_config, make_backend, run_turn
+
+cfg = load_config("sunmcp.json")
+backend = make_backend(cfg.backend)
+async with MCPHub(cfg.servers) as hub:
+    print(await run_turn(backend, hub, [], "hello", cfg.system))
+```
+
+## SunMCP Pro
+
+The core is free. **Pro** adds a Telegram bridge, persistent sessions (SQLite) and priority support with versioned releases. See the project page for details.
+
+## Compatibility
+
+Tested with `mcp` SDK 2.2. Not affiliated with Anthropic; "MCP" refers to the open Model Context Protocol.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
