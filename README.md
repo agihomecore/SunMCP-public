@@ -12,7 +12,7 @@ Model-agnostic **MCP client**. Connect any [MCP](https://modelcontextprotocol.io
 On by default, local, no cloud: Qwen2.5-VL through Ollama.
 
 ```bash
-ollama pull qwen2.5vl:7b
+ollama pull qwen2.5vl:3b
 pip install "sunmcp[screen]"
 sunmcp screen "what error is on my screen?"   # by command
 ```
@@ -84,3 +84,6 @@ See [docs/HARDWARE.md](docs/HARDWARE.md) for support tiers and measured numbers.
 
 ## Secrets
 Put API keys in a `.env` next to `sunmcp.json` (see `.env.example`); reference them by name with `api_key_env`. `.env` is git-ignored.
+
+## Box mode
+`sunmcp box` detects your machine and picks models for it; `sunmcp box --write` creates `sunmcp.json`. No model names to type.

@@ -16,7 +16,7 @@ SAMPLE_CONFIG: dict[str, Any] = {
     },
     "vision": {
         "enabled": True,
-        "model": "qwen2.5vl:7b",
+        "model": "qwen2.5vl:3b",
         "base_url": "http://localhost:11434/v1",
         "tool": True,
     },
@@ -48,7 +48,7 @@ class VisionConfig:
     """Screenshot + vision model (default: Qwen2.5-VL on Ollama). Local only unless you change base_url."""
 
     enabled: bool = True
-    model: str = "qwen2.5vl:7b"
+    model: str = "qwen2.5vl:3b"
     base_url: str = "http://localhost:11434/v1"
     api_key_env: str | None = None
     tool: bool = True  # expose `screenshot` to the chat model so it can look when it needs to
@@ -86,7 +86,7 @@ def parse_config(data: dict[str, Any]) -> Config:
     v = data.get("vision", {})
     vision = VisionConfig(
         enabled=bool(v.get("enabled", True)),
-        model=v.get("model", "qwen2.5vl:7b"),
+        model=v.get("model", "qwen2.5vl:3b"),
         base_url=v.get("base_url", "http://localhost:11434/v1"),
         api_key_env=v.get("api_key_env"),
         tool=bool(v.get("tool", True)),

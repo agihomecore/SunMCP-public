@@ -24,4 +24,4 @@ Status of each number: **measured** (we ran it), **sourced** (public guidance),
 1. Vision is a command (`screenshot`, `/screen`), never a background loop on Standard.
 2. The installer picks the model by installed RAM; the user never types a model name.
 3. Tokens/second on 4 cores: **to measure** before any marketing claim.
-4. Default chat model for Standard: to be chosen after the measurement (candidates from public guidance: Qwen 3-4B class).
+4. Default chat model for Standard: `qwen2.5:3b` (speed to be measured; tier logic in `sunmcp box`).

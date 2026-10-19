@@ -195,7 +195,7 @@ async def test_vision_look_sends_image_to_vl_model():
     v = Vision(VisionConfig(), capture=lambda m: b"\x89PNGfake", client=_vision_client(seen))
     assert await v.look("what is this?") == "an error dialog"
     body = seen[0]
-    assert body["model"] == "qwen2.5vl:7b"
+    assert body["model"] == "qwen2.5vl:3b"
     parts = body["messages"][0]["content"]
     assert parts[0]["text"] == "what is this?"
     assert parts[1]["image_url"]["url"].startswith("data:image/png;base64,")
@@ -228,7 +228,7 @@ async def test_screenshot_tool_reports_capture_error():
 
 
 def test_parse_config_vision_defaults_and_override():
-    assert parse_config({}).vision.model == "qwen2.5vl:7b"
+    assert parse_config({}).vision.model == "qwen2.5vl:3b"
     c = parse_config({"vision": {"enabled": False, "model": "x"}})
     assert c.vision.enabled is False and c.vision.model == "x"
 

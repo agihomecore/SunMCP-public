@@ -2,6 +2,10 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## 0.2.5
+- New `sunmcp box`: detects cores/RAM, picks a tier and models (see docs/HARDWARE.md), prints install commands, `--write` creates sunmcp.json.
+- Default vision model is now `qwen2.5vl:3b` (7B did not answer on CPU-only hardware).
+
 ## 0.2.4
 - `.env` support: `sunmcp.json`'s sibling `.env` is loaded (never overrides real environment variables). `.env.example` added.
 
