@@ -15,7 +15,7 @@ Status of each number: **measured** (we ran it), **sourced** (public guidance),
 | **GPU** | GPU with 8+ GB VRAM | 7-14B | 7B interactive (to measure) | yes |
 
 ## Measured on a CPU-only laptop (Intel i5-8250U, 4 cores / 8 threads, 32 GB RAM, 0.3 GB VRAM)
-- `qwen2.5:7b` (4.7 GB): tool calling works (add 17+25 = 42, shout "done" = DONE).
+- `qwen2.5:7b` (4.7 GB): tool calling works (add 17+25 = 42, shout "done" = DONE). Speed, 2 runs, 64 tokens (Ollama's own timers): generation 3.7 and 4.8 tok/s, prompt processing 5.6 tok/s cold and 183 tok/s warm, first load 8.8 s. That is borderline for chat: fine for short answers, slow for long ones.
 - `qwen2.5vl:3b` (3.2 GB): described the real screen correctly, about 5 minutes per image at 768 px.
 - `qwen2.5vl:7b` (6.0 GB): no answer within 5+ minutes at 768 px. Not usable on this class of machine.
 - `qwen2.5vl` models cannot call tools in Ollama; use a separate tool-capable chat model.
@@ -23,5 +23,5 @@ Status of each number: **measured** (we ran it), **sourced** (public guidance),
 ## Rules for the product
 1. Vision is a command (`screenshot`, `/screen`), never a background loop on Standard.
 2. The installer picks the model by installed RAM; the user never types a model name.
-3. Tokens/second on 4 cores: **to measure** before any marketing claim.
+3. Tokens/second on 4 cores: 7B measured at ~4-5 tok/s (above); 3B **to measure** (expected faster, not verified). Do not quote a number to customers for other hardware.
 4. Default chat model for Standard: `qwen2.5:3b` (speed to be measured; tier logic in `sunmcp box`).
