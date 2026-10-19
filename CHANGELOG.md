@@ -2,6 +2,10 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## [0.2.2] - 2026-10-20
+### Fixed
+- First real run of `screen` on a CPU-only PC: qwen2.5vl:7b on a 1568 px screenshot did not answer in 5 min and the error was misleading. Screenshots are now downscaled to `vision.max_side` (default 1024), `vision.timeout` is configurable (default 600 s), and a timeout says so instead of suggesting `ollama pull`.
+
 ## [0.2.1] - 2026-10-20
 ### Fixed
 - Model server HTTP errors (e.g. Ollama 400 "does not support tools") now show the server's message and a hint, not a raw traceback. Found on first real run on Windows (Python 3.14, mcp 2.3.0).

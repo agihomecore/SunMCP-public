@@ -52,6 +52,8 @@ class VisionConfig:
     api_key_env: str | None = None
     tool: bool = True  # expose `screenshot` to the chat model so it can look when it needs to
     max_tokens: int = 1024
+    max_side: int = 1024  # screenshots are downscaled to this many px on the long side (speed on CPU)
+    timeout: float = 600.0  # seconds to wait for the vision model
 
 
 @dataclass
@@ -88,6 +90,8 @@ def parse_config(data: dict[str, Any]) -> Config:
         api_key_env=v.get("api_key_env"),
         tool=bool(v.get("tool", True)),
         max_tokens=int(v.get("max_tokens", 1024)),
+        max_side=int(v.get("max_side", 1024)),
+        timeout=float(v.get("timeout", 600)),
     )
     return Config(backend=backend, servers=servers, system=data.get("system"), vision=vision)
 

@@ -242,3 +242,18 @@ async def test_backend_http_error_is_readable_with_hint():
         await b.complete([{"role": "user", "content": "hi"}], [{"name": "t", "input_schema": {"type": "object"}}])
     msg = str(e.value)
     assert "HTTP 400" in msg and "does not support tools" in msg and "vision.model" in msg
+
+
+async def test_vision_timeout_message_is_clear():
+    def handler(request):
+        raise httpx.ReadTimeout("slow", request=request)
+
+    v = Vision(VisionConfig(timeout=5), capture=lambda m: b"png", client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    with pytest.raises(RuntimeError, match="did not answer within 5s"):
+        await v.look("q")
+
+
+def test_vision_config_max_side_and_timeout_parse():
+    c = parse_config({"vision": {"max_side": 768, "timeout": 900}})
+    assert c.vision.max_side == 768 and c.vision.timeout == 900
+    assert parse_config({}).vision.max_side == 1024

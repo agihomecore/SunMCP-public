@@ -67,7 +67,7 @@ class Vision:
     ) -> None:
         self.cfg = cfg
         self._capture = capture
-        self._client = client or httpx.AsyncClient(timeout=300.0)
+        self._client = client or httpx.AsyncClient(timeout=cfg.timeout)
 
     async def describe(self, png: bytes, question: str | None = None) -> str:
         key = os.environ.get(self.cfg.api_key_env) if self.cfg.api_key_env else None
@@ -91,15 +91,21 @@ class Vision:
                 f"{self.cfg.base_url.rstrip('/')}/chat/completions", json=payload, headers=headers
             )
             r.raise_for_status()
+        except httpx.TimeoutException as e:
+            raise RuntimeError(
+                f"vision model '{self.cfg.model}' did not answer within {self.cfg.timeout:.0f}s. "
+                f"It is probably running on CPU: lower vision.max_side (now {self.cfg.max_side}), "
+                f"raise vision.timeout, or use a smaller / GPU-backed model."
+            ) from e
         except httpx.HTTPError as e:
             raise RuntimeError(
-                f"vision model '{self.cfg.model}' unavailable at {self.cfg.base_url}: {e}. "
+                f"vision model '{self.cfg.model}' unavailable at {self.cfg.base_url}: {e!r}. "
                 f"With Ollama run: ollama pull {self.cfg.model}"
             ) from e
         return r.json()["choices"][0]["message"].get("content") or ""
 
     async def look(self, question: str | None = None, monitor: int = 1) -> str:
-        return await self.describe(_shrink(self._capture(monitor)), question)
+        return await self.describe(_shrink(self._capture(monitor), self.cfg.max_side), question)
 
 
 def attach_vision(hub: MCPHub, vision: Vision) -> None:
