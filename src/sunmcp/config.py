@@ -100,4 +100,4 @@ def load_config(path: str | Path) -> Config:
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"config not found: {p} (run `sunmcp init` to create one)")
-    return parse_config(json.loads(p.read_text(encoding="utf-8")))
+    return parse_config(json.loads(p.read_text(encoding="utf-8-sig")))

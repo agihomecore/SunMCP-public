@@ -257,3 +257,11 @@ def test_vision_config_max_side_and_timeout_parse():
     c = parse_config({"vision": {"max_side": 768, "timeout": 900}})
     assert c.vision.max_side == 768 and c.vision.timeout == 900
     assert parse_config({}).vision.max_side == 1024
+
+
+def test_config_with_utf8_bom(tmp_path):
+    # Windows PowerShell and Notepad write a BOM; the client must still read it.
+    p = tmp_path / "sunmcp.json"
+    p.write_bytes(b"\xef\xbb\xbf" + b'{"backend": {"type": "ollama", "model": "m"}}')
+    from sunmcp.config import load_config
+    assert load_config(str(p)).backend.model == "m"
