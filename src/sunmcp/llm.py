@@ -42,6 +42,27 @@ class Backend(Protocol):
     ) -> Turn: ...
 
 
+def _check(r: httpx.Response, who: str) -> None:
+    """Turn an HTTP error into a readable RuntimeError that includes what the server said."""
+    if r.status_code < 400:
+        return
+    try:
+        body = r.json()
+        detail = (body.get("error") or body) if isinstance(body, dict) else body
+        if isinstance(detail, dict):
+            detail = detail.get("message") or detail
+    except ValueError:
+        detail = r.text
+    detail = str(detail)[:400]
+    hint = ""
+    if "does not support tools" in detail:
+        hint = (
+            " Hint: pick a tool-capable chat model in `backend.model` (for example qwen2.5:7b); "
+            "keep the vision model only in `vision.model`."
+        )
+    raise RuntimeError(f"{who} returned HTTP {r.status_code}: {detail}.{hint}")
+
+
 def _parse_args(raw: Any) -> dict[str, Any]:
     if isinstance(raw, dict):
         return raw
@@ -128,7 +149,7 @@ class OpenAICompatBackend:
         r = await self._client.post(
             f"{self.base_url}/chat/completions", json=payload, headers=headers
         )
-        r.raise_for_status()
+        _check(r, f"model '{self.model}' at {self.base_url}")
         msg = r.json()["choices"][0]["message"]
         calls = [
             ToolCall(
@@ -219,7 +240,7 @@ class AnthropicBackend:
             json=payload,
             headers={"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
         )
-        r.raise_for_status()
+        _check(r, f"Anthropic API (model '{self.model}')")
         text, calls = [], []
         for block in r.json().get("content", []):
             if block["type"] == "text":

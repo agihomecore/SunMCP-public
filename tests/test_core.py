@@ -231,3 +231,14 @@ def test_parse_config_vision_defaults_and_override():
     assert parse_config({}).vision.model == "qwen2.5vl:7b"
     c = parse_config({"vision": {"enabled": False, "model": "x"}})
     assert c.vision.enabled is False and c.vision.model == "x"
+
+
+async def test_backend_http_error_is_readable_with_hint():
+    def handler(request):
+        return httpx.Response(400, json={"error": {"message": "registry.ollama.ai/library/qwen2.5vl:7b does not support tools"}})
+
+    b = OpenAICompatBackend("qwen2.5vl:7b", "http://x/v1", client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    with pytest.raises(RuntimeError) as e:
+        await b.complete([{"role": "user", "content": "hi"}], [{"name": "t", "input_schema": {"type": "object"}}])
+    msg = str(e.value)
+    assert "HTTP 400" in msg and "does not support tools" in msg and "vision.model" in msg

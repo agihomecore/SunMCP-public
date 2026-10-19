@@ -8,6 +8,8 @@ import json
 import sys
 from pathlib import Path
 
+import httpx
+
 from . import __version__
 from .agent import run_turn
 from .config import SAMPLE_CONFIG, load_config
@@ -122,6 +124,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.cmd == "run":
             return asyncio.run(_run(args.config, args.prompt))
         return asyncio.run(_chat(args.config))
+    except httpx.ConnectError as e:
+        print(f"error: cannot reach the model server: {e}. Is Ollama running?", file=sys.stderr)
+        return 2
     except (FileNotFoundError, ValueError, RuntimeError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
