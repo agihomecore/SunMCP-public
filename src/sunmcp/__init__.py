@@ -6,7 +6,7 @@ from .hub import MCPHub
 from .vision import Vision, attach_vision
 from .llm import AnthropicBackend, Backend, OpenAICompatBackend, ToolCall, Turn, make_backend
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 
 __all__ = [
     "AnthropicBackend",

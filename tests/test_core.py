@@ -265,3 +265,20 @@ def test_config_with_utf8_bom(tmp_path):
     p.write_bytes(b"\xef\xbb\xbf" + b'{"backend": {"type": "ollama", "model": "m"}}')
     from sunmcp.config import load_config
     assert load_config(str(p)).backend.model == "m"
+
+
+def test_dotenv_loads_without_overriding(tmp_path, monkeypatch):
+    from sunmcp.config import load_dotenv
+    monkeypatch.delenv("SUNMCP_T1", raising=False)
+    monkeypatch.setenv("SUNMCP_T2", "keep")
+    (tmp_path / ".env").write_text(
+        "﻿# c\nSUNMCP_T1='abc'\nexport SUNMCP_T3=\"x y\"\nSUNMCP_T2=new\nbad line\n",
+        encoding="utf-8",
+    )
+    got = load_dotenv(tmp_path / ".env")
+    import os
+    assert os.environ["SUNMCP_T1"] == "abc"
+    assert os.environ["SUNMCP_T3"] == "x y"
+    assert os.environ["SUNMCP_T2"] == "keep"
+    assert "SUNMCP_T2" not in got
+    monkeypatch.delenv("SUNMCP_T1"); monkeypatch.delenv("SUNMCP_T3")

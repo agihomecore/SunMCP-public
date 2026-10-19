@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -96,8 +97,35 @@ def parse_config(data: dict[str, Any]) -> Config:
     return Config(backend=backend, servers=servers, system=data.get("system"), vision=vision)
 
 
+def load_dotenv(path: str | Path) -> dict[str, str]:
+    """Read KEY=VALUE lines from a .env file into os.environ.
+
+    Never overrides a variable that is already set. Returns what was loaded.
+    Secrets belong here (or in the real environment), never in sunmcp.json.
+    """
+    p = Path(path)
+    loaded: dict[str, str] = {}
+    if not p.is_file():
+        return loaded
+    for raw in p.read_text(encoding="utf-8-sig").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        key, _, val = line.partition("=")
+        key, val = key.strip(), val.strip()
+        if len(val) >= 2 and val[0] == val[-1] and val[0] in "\"'":
+            val = val[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = val
+            loaded[key] = val
+    return loaded
+
+
 def load_config(path: str | Path) -> Config:
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"config not found: {p} (run `sunmcp init` to create one)")
+    load_dotenv(p.parent / ".env")
     return parse_config(json.loads(p.read_text(encoding="utf-8-sig")))

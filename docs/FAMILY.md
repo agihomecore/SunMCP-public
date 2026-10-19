@@ -11,6 +11,9 @@ Four names, one line of work. Each one teaches the next, and each one carries th
 
 Names and roles are the author's. Domain and product status were stated by the author, not verified here.
 
+## Point zero: the thread
+The assistant keeps one permanent thread that moves forward over five years. It works on its own, without being commanded; it may ask a question, but it never waits for the answer. Details: THREAD.md.
+
 ## Principle (the author's words, 2026-10-20)
 The student outgrows his level when the teacher gets a product of his own (the student).
 

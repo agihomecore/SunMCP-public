@@ -2,6 +2,9 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## 0.2.4
+- `.env` support: `sunmcp.json`'s sibling `.env` is loaded (never overrides real environment variables). `.env.example` added.
+
 ## 0.2.3
 - Fix: config files saved with a UTF-8 BOM (Windows PowerShell, Notepad) now load.
 

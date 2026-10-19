@@ -81,3 +81,6 @@ MIT, see [LICENSE](LICENSE).
 
 ## Hardware
 See [docs/HARDWARE.md](docs/HARDWARE.md) for support tiers and measured numbers.
+
+## Secrets
+Put API keys in a `.env` next to `sunmcp.json` (see `.env.example`); reference them by name with `api_key_env`. `.env` is git-ignored.
