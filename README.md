@@ -7,6 +7,19 @@ Model-agnostic **MCP client**. Connect any [MCP](https://modelcontextprotocol.io
 - Agent loop with tool-call error recovery and a step limit
 - ~500 lines, no framework, MIT
 
+## Vision (screenshots)
+
+On by default, local, no cloud: Qwen2.5-VL through Ollama.
+
+```bash
+ollama pull qwen2.5vl:7b
+pip install "sunmcp[screen]"
+sunmcp screen "what error is on my screen?"   # by command
+```
+
+In `sunmcp chat` use `/screen <question>`. The chat model also gets a `screenshot` tool and calls it when it needs to look.
+Nothing is captured unless you ask or the model calls the tool. Turn it off with `"vision": {"enabled": false}`, or only the tool with `"tool": false`.
+
 ## Install
 
 ```bash

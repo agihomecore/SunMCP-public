@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import AsyncExitStack
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from mcp import ClientSession, StdioServerParameters
@@ -28,6 +29,17 @@ class MCPHub:
         self._stack = AsyncExitStack()
         self._sessions: dict[str, ClientSession] = {}
         self._tools: list[dict[str, Any]] = []
+        self._builtin: dict[str, Callable[[dict[str, Any]], Awaitable[tuple[str, bool]]]] = {}
+        self._builtin_specs: list[dict[str, Any]] = []
+
+    def register_builtin(
+        self,
+        spec: dict[str, Any],
+        handler: Callable[[dict[str, Any]], Awaitable[tuple[str, bool]]],
+    ) -> None:
+        """Add an in-process tool (no MCP server). Name must not contain '__'."""
+        self._builtin[spec["name"]] = handler
+        self._builtin_specs.append(spec)
 
     async def __aenter__(self) -> "MCPHub":
         try:
@@ -70,10 +82,15 @@ class MCPHub:
 
     @property
     def tools(self) -> list[dict[str, Any]]:
-        return self._tools
+        return [*self._builtin_specs, *self._tools]
 
     async def call(self, qualified_name: str, arguments: dict[str, Any]) -> tuple[str, bool]:
         """Returns (text, is_error). Never raises for tool-level problems, so the model can recover."""
+        if qualified_name in self._builtin:
+            try:
+                return await self._builtin[qualified_name](arguments)
+            except Exception as e:
+                return f"tool call failed: {e}", True
         server, _, tool = qualified_name.partition(SEP)
         session = self._sessions.get(server)
         if session is None or not tool:

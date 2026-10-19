@@ -176,3 +176,58 @@ async def test_broken_server_gives_readable_error():
 def test_config_rejects_double_underscore_server_name():
     with pytest.raises(ValueError):
         parse_config({"servers": {"a__b": {"command": "x"}}})
+
+
+# ---- vision
+from sunmcp import Vision, VisionConfig, attach_vision  # noqa: E402
+
+
+def _vision_client(captured):
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "an error dialog"}}]})
+
+    return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+async def test_vision_look_sends_image_to_vl_model():
+    seen: list = []
+    v = Vision(VisionConfig(), capture=lambda m: b"\x89PNGfake", client=_vision_client(seen))
+    assert await v.look("what is this?") == "an error dialog"
+    body = seen[0]
+    assert body["model"] == "qwen2.5vl:7b"
+    parts = body["messages"][0]["content"]
+    assert parts[0]["text"] == "what is this?"
+    assert parts[1]["image_url"]["url"].startswith("data:image/png;base64,")
+
+
+async def test_screenshot_tool_registered_and_callable():
+    seen: list = []
+    v = Vision(VisionConfig(), capture=lambda m: b"png", client=_vision_client(seen))
+    async with MCPHub(demo_servers()) as hub:
+        attach_vision(hub, v)
+        assert any(t["name"] == "screenshot" for t in hub.tools)
+        text, err = await hub.call("screenshot", {"question": "q"})
+        assert (text, err) == ("an error dialog", False)
+
+
+async def test_screenshot_tool_off_when_disabled():
+    async with MCPHub(demo_servers()) as hub:
+        attach_vision(hub, Vision(VisionConfig(tool=False)))
+        assert not any(t["name"] == "screenshot" for t in hub.tools)
+
+
+async def test_screenshot_tool_reports_capture_error():
+    def boom(m):
+        raise RuntimeError("no display")
+
+    async with MCPHub(demo_servers()) as hub:
+        attach_vision(hub, Vision(VisionConfig(), capture=boom))
+        text, err = await hub.call("screenshot", {})
+        assert err and "no display" in text
+
+
+def test_parse_config_vision_defaults_and_override():
+    assert parse_config({}).vision.model == "qwen2.5vl:7b"
+    c = parse_config({"vision": {"enabled": False, "model": "x"}})
+    assert c.vision.enabled is False and c.vision.model == "x"

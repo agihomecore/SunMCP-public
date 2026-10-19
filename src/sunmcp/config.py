@@ -13,6 +13,12 @@ SAMPLE_CONFIG: dict[str, Any] = {
         "model": "qwen2.5:7b",
         "base_url": "http://localhost:11434/v1",
     },
+    "vision": {
+        "enabled": True,
+        "model": "qwen2.5vl:7b",
+        "base_url": "http://localhost:11434/v1",
+        "tool": True,
+    },
     "system": "You are a helpful assistant. Use the available tools when they help.",
     "servers": {
         "demo": {"command": "python", "args": ["examples/demo_server.py"]},
@@ -37,10 +43,23 @@ class BackendConfig:
 
 
 @dataclass
+class VisionConfig:
+    """Screenshot + vision model (default: Qwen2.5-VL on Ollama). Local only unless you change base_url."""
+
+    enabled: bool = True
+    model: str = "qwen2.5vl:7b"
+    base_url: str = "http://localhost:11434/v1"
+    api_key_env: str | None = None
+    tool: bool = True  # expose `screenshot` to the chat model so it can look when it needs to
+    max_tokens: int = 1024
+
+
+@dataclass
 class Config:
     backend: BackendConfig = field(default_factory=BackendConfig)
     servers: dict[str, ServerConfig] = field(default_factory=dict)
     system: str | None = None
+    vision: VisionConfig = field(default_factory=VisionConfig)
 
 
 def parse_config(data: dict[str, Any]) -> Config:
@@ -61,7 +80,16 @@ def parse_config(data: dict[str, Any]) -> Config:
         servers[name] = ServerConfig(
             command=s["command"], args=list(s.get("args", [])), env=s.get("env")
         )
-    return Config(backend=backend, servers=servers, system=data.get("system"))
+    v = data.get("vision", {})
+    vision = VisionConfig(
+        enabled=bool(v.get("enabled", True)),
+        model=v.get("model", "qwen2.5vl:7b"),
+        base_url=v.get("base_url", "http://localhost:11434/v1"),
+        api_key_env=v.get("api_key_env"),
+        tool=bool(v.get("tool", True)),
+        max_tokens=int(v.get("max_tokens", 1024)),
+    )
+    return Config(backend=backend, servers=servers, system=data.get("system"), vision=vision)
 
 
 def load_config(path: str | Path) -> Config:
