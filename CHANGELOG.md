@@ -2,6 +2,13 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## 0.2.7
+- New `sunmcp thread`: the "thread" loop (docs/THREAD.md). Works from plain files (GOAL.md, LOG.md, OUTBOX.jsonl, ANSWERS.jsonl), takes one step per interval, never blocks on a question.
+  - Built-in non-blocking `ask` tool (returns at once with the model's assumption) and `thread_log`.
+  - Irreversible-looking tools (delete, send, publish, push, pay ...) are blocked and become approval questions; `--allow` / `--deny` tune it.
+  - Kill switch: a `STOP` file (`sunmcp thread stop` / `resume`); daily step cap; failed steps are logged and retried with backoff.
+  - `--notify "<command>"` receives each new question as JSON on stdin.
+
 ## 0.2.6
 - `sunmcp box` now writes CPU-only Ollama Modelfiles (`sunbox-chat`, `sunbox-vision`: `num_gpu 0`, `num_ctx 4096`) and uses them. Measured on a 4C/8T laptop: Ollama's default (24% of layers on a weak iGPU, 8192 context) gave 3 tok/s on qwen2.5:3b; CPU-only gave 10.5 tok/s. `--gpu` keeps the stock models.
 

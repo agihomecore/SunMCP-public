@@ -71,6 +71,19 @@ async with MCPHub(cfg.servers) as hub:
 
 The core is free. **Pro** adds a Telegram bridge, persistent sessions (SQLite) and priority support with versioned releases. See the project page for details.
 
+## The thread (work without commands)
+
+```
+sunmcp thread init              # creates thread/GOAL.md and LOG.md
+# edit thread/GOAL.md, then:
+sunmcp thread run --interval 900 --notify "python tell_me.py"
+sunmcp thread status            # open questions
+sunmcp thread answer q1 "yes, the 12 TB"
+sunmcp thread stop              # kill switch (resume to continue)
+```
+
+Each step starts from the files, does one useful thing with your tools, appends to `LOG.md`. A question never blocks the work: the model states its assumption and goes on; your answer corrects course at the next step. Tools that look irreversible are blocked and turned into approval questions. Details: docs/THREAD.md.
+
 ## Compatibility
 
 Tested with `mcp` SDK 2.2. Not affiliated with Anthropic; "MCP" refers to the open Model Context Protocol.

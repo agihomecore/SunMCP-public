@@ -3,10 +3,11 @@
 from .agent import run_turn
 from .config import BackendConfig, Config, ServerConfig, VisionConfig, load_config
 from .hub import MCPHub
+from .thread import GuardedHub, Thread, run_loop, run_step
 from .vision import Vision, attach_vision
 from .llm import AnthropicBackend, Backend, OpenAICompatBackend, ToolCall, Turn, make_backend
 
-__version__ = "0.2.6"
+__version__ = "0.2.7"
 
 __all__ = [
     "AnthropicBackend",
@@ -16,6 +17,10 @@ __all__ = [
     "MCPHub",
     "OpenAICompatBackend",
     "ServerConfig",
+    "Thread",
+    "GuardedHub",
+    "run_loop",
+    "run_step",
     "ToolCall",
     "Vision",
     "VisionConfig",

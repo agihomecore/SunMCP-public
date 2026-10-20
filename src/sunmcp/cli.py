@@ -1,4 +1,4 @@
-"""sunmcp CLI: init | box | tools | run | chat | screen"""
+"""sunmcp CLI: init | box | tools | run | chat | screen | thread"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from .box import box_config, choose_tier, detect_hardware, modelfiles, report
 from .config import SAMPLE_CONFIG, load_config
 from .hub import MCPHub
 from .llm import make_backend
+from .thread import DEFAULT_DENY, Thread, run_loop, shell_notifier
 from .vision import Vision, attach_vision
 
 
@@ -41,6 +42,48 @@ async def _screen(config_path: str, question: str | None, monitor: int) -> int:
         print("error: vision is disabled in config", file=sys.stderr)
         return 2
     print(await Vision(cfg.vision).look(question, monitor))
+    return 0
+
+
+async def _thread_run(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    thread = Thread(args.dir)
+    thread.goal()  # fail early and readably if there is no GOAL.md
+    backend = make_backend(cfg.backend)
+    deny = (*DEFAULT_DENY, *args.deny)
+    notify = shell_notifier(args.notify) if args.notify else None
+    async with MCPHub(cfg.servers) as hub:
+        attach_vision(hub, Vision(cfg.vision))
+        steps = await run_loop(
+            backend, hub, thread, cfg.system, interval=args.interval, once=args.once,
+            max_per_day=args.max_per_day, deny=deny, allow=tuple(args.allow), notify=notify,
+            on_tool=_print_tool,
+        )
+    print(f"thread: {steps} step(s) done" + (" (stopped)" if thread.stopped() else ""))
+    return 0
+
+
+def _thread_control(args: argparse.Namespace) -> int:
+    thread = Thread(args.dir)
+    if args.action == "init":
+        made = thread.init()
+        print("created: " + (", ".join(str(p) for p in made) if made else "nothing (already set up)"))
+    elif args.action == "status":
+        print(thread.status())
+    elif args.action == "stop":
+        thread.stop()
+        print(f"stopped: {thread.stop_file}")
+    elif args.action == "resume":
+        thread.resume()
+        print("resumed")
+    elif args.action == "ask":
+        print(thread.ask(" ".join(args.text)))
+    elif args.action == "answer":
+        if len(args.text) < 2:
+            print("usage: sunmcp thread answer <id> <text>", file=sys.stderr)
+            return 2
+        thread.answer(args.text[0], " ".join(args.text[1:]))
+        print("recorded")
     return 0
 
 
@@ -112,8 +155,21 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--force", action="store_true", help="overwrite an existing config")
     s.add_argument("--gpu", action="store_true", help="this machine has a real GPU: let Ollama use it")
     s.add_argument("-c", "--config", default="sunmcp.json")
+    s = sub.add_parser("thread", help="a loop that works without commands and never blocks on a question")
+    s.add_argument("action", choices=["init", "run", "status", "stop", "resume", "ask", "answer"])
+    s.add_argument("text", nargs="*", help="for `answer`: <id> <text>; for `ask`: the question")
+    s.add_argument("-d", "--dir", default="thread", help="thread directory (GOAL.md, LOG.md, ...)")
+    s.add_argument("-c", "--config", default="sunmcp.json")
+    s.add_argument("--interval", type=float, default=900.0, help="seconds between steps (run)")
+    s.add_argument("--once", action="store_true", help="do one step and exit (run)")
+    s.add_argument("--max-per-day", type=int, default=48, help="step cap per day (run)")
+    s.add_argument("--deny", action="append", default=[], help="extra tool-name glob to block (run)")
+    s.add_argument("--allow", action="append", default=[], help="tool-name glob exempt from blocking (run)")
+    s.add_argument("--notify", help="command that receives each new question as JSON on stdin (run)")
     args = p.parse_args(argv)
 
+    if args.cmd == "thread" and args.action != "run":
+        return _thread_control(args)
     if args.cmd == "box":
         hw = detect_hardware()
         tier = choose_tier(hw)
@@ -145,6 +201,8 @@ def main(argv: list[str] | None = None) -> int:
             return asyncio.run(_tools(args.config))
         if args.cmd == "screen":
             return asyncio.run(_screen(args.config, args.question, args.monitor))
+        if args.cmd == "thread":
+            return asyncio.run(_thread_run(args))
         if args.cmd == "run":
             return asyncio.run(_run(args.config, args.prompt))
         return asyncio.run(_chat(args.config))
