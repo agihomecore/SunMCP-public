@@ -2,6 +2,9 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## 0.2.8
+- `sunmcp box --write --install`: also downloads and sets up the models (runs the `ollama pull` / `ollama create` commands itself). If Ollama is missing it says where to get it. A buyer now needs one command after installing the wheels.
+
 ## 0.2.7
 - New `sunmcp thread`: the "thread" loop (docs/THREAD.md). Works from plain files (GOAL.md, LOG.md, OUTBOX.jsonl, ANSWERS.jsonl), takes one step per interval, never blocks on a question.
   - Built-in non-blocking `ask` tool (returns at once with the model's assumption) and `thread_log`.

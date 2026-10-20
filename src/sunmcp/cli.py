@@ -12,7 +12,7 @@ import httpx
 
 from . import __version__
 from .agent import run_turn
-from .box import box_config, choose_tier, detect_hardware, modelfiles, report
+from .box import box_config, choose_tier, detect_hardware, install_models, modelfiles, report
 from .config import SAMPLE_CONFIG, load_config
 from .hub import MCPHub
 from .llm import make_backend
@@ -154,6 +154,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--write", action="store_true", help="write the config")
     s.add_argument("--force", action="store_true", help="overwrite an existing config")
     s.add_argument("--gpu", action="store_true", help="this machine has a real GPU: let Ollama use it")
+    s.add_argument("--install", action="store_true", help="also download and set up the models (needs Ollama)")
     s.add_argument("-c", "--config", default="sunmcp.json")
     s = sub.add_parser("thread", help="a loop that works without commands and never blocks on a question")
     s.add_argument("action", choices=["init", "run", "status", "stop", "resume", "ask", "answer"])
@@ -187,6 +188,11 @@ def main(argv: list[str] | None = None) -> int:
                     mf = path.parent / f"Modelfile.{name}"
                     mf.write_text(text, encoding="utf-8")
                     print(f"wrote {mf}")
+        if args.install:
+            if cpu_only and not args.write:
+                print("--install needs --write (the Modelfiles must exist first)", file=sys.stderr)
+                return 1
+            return install_models(tier, cpu_only, cwd=str(Path(args.config).resolve().parent))
         return 0
     if args.cmd == "init":
         path = Path(args.config)

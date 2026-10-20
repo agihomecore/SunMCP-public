@@ -137,6 +137,40 @@ def pull_commands(tier: Tier, cpu_only: bool = True) -> list[str]:
     return cmds
 
 
+OLLAMA_DOWNLOAD = "https://ollama.com/download"
+
+
+def install_models(
+    tier: Tier,
+    cpu_only: bool = True,
+    cwd: str | None = None,
+    run: Any = None,
+    which: Any = None,
+    echo: Any = print,
+) -> int:
+    """Run the pull/create commands so a buyer needs one command, not five.
+
+    Returns 0 on success, 2 when Ollama is missing, otherwise the failing command's exit code.
+    """
+    import shlex
+    import shutil
+    import subprocess
+
+    run = run or subprocess.run
+    which = which or shutil.which
+    if not which("ollama"):
+        echo(f"Ollama is not installed. Install it from {OLLAMA_DOWNLOAD}, start it, then run this again.")
+        return 2
+    for cmd in pull_commands(tier, cpu_only):
+        echo(f"$ {cmd}")
+        code = run(shlex.split(cmd), cwd=cwd).returncode
+        if code != 0:
+            echo(f"failed ({code}): {cmd}")
+            return code
+    echo("models ready")
+    return 0
+
+
 def report(hw: Hardware, tier: Tier, cpu_only: bool = True) -> str:
     lines = [
         f"machine: {hw.cores} physical cores ({hw.threads or hw.cores} threads), {hw.ram_gb:.1f} GB RAM",
