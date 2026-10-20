@@ -73,3 +73,25 @@ def test_install_models_stops_on_failure():
     rc = install_models(tier, True, run=lambda c, cwd: calls.append(c) or SimpleNamespace(returncode=1),
                         which=lambda n: "x", echo=lambda m: None)
     assert rc == 1 and len(calls) == 1
+
+
+def test_nvidia_gpu_picks_gpu_tier():
+    from sunmcp.box import Hardware, choose_tier
+    t = choose_tier(Hardware(cores=4, ram_gb=16, threads=8, gpu="NVIDIA GeForce RTX 3060"))
+    assert t.name == "GPU" and "RTX 3060" in t.note
+
+
+def test_detect_nvidia_absent_and_present():
+    from types import SimpleNamespace
+    from sunmcp.box import detect_nvidia
+
+    def missing(*a, **k):
+        raise FileNotFoundError
+    assert detect_nvidia(run=missing) == ""
+    ok = lambda *a, **k: SimpleNamespace(returncode=0, stdout="NVIDIA GeForce RTX 3060\n")
+    assert detect_nvidia(run=ok) == "NVIDIA GeForce RTX 3060"
+
+
+def test_weak_machine_states_requirement():
+    from sunmcp.box import Hardware, choose_tier, REQUIREMENT
+    assert REQUIREMENT in choose_tier(Hardware(cores=2, ram_gb=8)).note

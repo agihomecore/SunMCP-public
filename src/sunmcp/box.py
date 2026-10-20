@@ -19,6 +19,7 @@ class Hardware:
     cores: int  # physical cores (what tiers are based on)
     ram_gb: float
     threads: int = 0  # logical processors
+    gpu: str = ""  # NVIDIA GPU name if nvidia-smi sees one
 
 
 @dataclass
@@ -82,21 +83,41 @@ def _physical_cores(logical: int) -> int:
     return logical
 
 
+def detect_nvidia(run: Any = None) -> str:
+    """Name of the first NVIDIA GPU, or "" when there is none (or no driver)."""
+    run = run or subprocess.run
+    try:
+        r = run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+                capture_output=True, text=True, timeout=15)
+        if r.returncode == 0:
+            return (r.stdout or "").strip().splitlines()[0].strip() if (r.stdout or "").strip() else ""
+    except Exception:
+        pass
+    return ""
+
+
 def detect_hardware() -> Hardware:
     logical = os.cpu_count() or 1
-    return Hardware(cores=_physical_cores(logical), ram_gb=_ram_bytes() / 1024**3, threads=logical)
+    return Hardware(cores=_physical_cores(logical), ram_gb=_ram_bytes() / 1024**3,
+                    threads=logical, gpu=detect_nvidia())
+
+
+REQUIREMENT = "Needs a CPU above average (8+ cores, 32 GB RAM) or an NVIDIA RTX GPU."
 
 
 def choose_tier(hw: Hardware) -> Tier:
     """Tiers from docs/HARDWARE.md. Thresholds allow ~1 GB of OS-reported slack."""
+    if hw.gpu and hw.ram_gb >= 15:
+        return Tier("GPU", "qwen2.5:7b", "qwen2.5vl:7b", f"NVIDIA GPU ({hw.gpu}): models run on the GPU.")
     if hw.cores < 4 or hw.ram_gb < 15:
         return Tier(
             "Community", "qwen2.5:3b", "qwen2.5vl:3b",
-            "Below the supported minimum (4 cores, 16 GB). It may run, slowly; no support.",
+            "Below the supported minimum. " + REQUIREMENT + " It may run, slowly; no support.",
         )
     if hw.cores >= 8 and hw.ram_gb >= 31:
         return Tier("Plus", "qwen2.5:7b", "qwen2.5vl:3b", "7B chat measured with tool calling; vision on command.")
-    return Tier("Standard", "qwen2.5:3b", "qwen2.5vl:3b", "3B chat (unmeasured speed); vision on command only.")
+    return Tier("Standard", "qwen2.5:3b", "qwen2.5vl:3b",
+                "3B chat, slow on an average CPU. " + REQUIREMENT)
 
 
 CHAT_ALIAS = "sunbox-chat"
@@ -174,6 +195,7 @@ def install_models(
 def report(hw: Hardware, tier: Tier, cpu_only: bool = True) -> str:
     lines = [
         f"machine: {hw.cores} physical cores ({hw.threads or hw.cores} threads), {hw.ram_gb:.1f} GB RAM",
+        f"gpu:     {hw.gpu or 'no NVIDIA GPU found'}",
         f"tier:    {tier.name}",
         f"chat:    {tier.chat}",
         f"vision:  {tier.vision} (on command only)",

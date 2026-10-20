@@ -7,12 +7,14 @@ businesses on ordinary hardware. Enthusiasts are welcome to try anything
 Status of each number: **measured** (we ran it), **sourced** (public guidance),
 **to measure** (not yet verified; do not promise it to customers).
 
+**Requirement (what we promise buyers): a CPU above average (8+ cores, 32 GB RAM) or an NVIDIA RTX GPU.** Standard still works, slowly.
+
 | Tier | Hardware | Chat model | Vision | Support |
 |---|---|---|---|---|
 | Community | below Standard, old PCs, phones, SBCs | whatever you manage to run | no | none, self-service |
 | **Standard** | x86-64 PC (AVX2), 4 physical cores, 16 GB RAM, SSD, ~20 GB free, no GPU needed | `qwen2.5:3b`, ~10 tok/s measured on i5-8250U | `qwen2.5vl:3b`, on command, ~100 s per screenshot measured | yes |
 | **Plus** | 8 physical cores, 32 GB RAM | 7-8B, Q4_K_M (sourced: practical at 32 GB) | 3B on command | yes |
-| **GPU** | GPU with 8+ GB VRAM | 7-14B | 7B interactive (to measure) | yes |
+| **GPU** | NVIDIA GPU (RTX), 8+ GB VRAM; detected automatically by `sunmcp box` | 7-14B | 7B interactive (to measure) | yes |
 
 ## Measured on a CPU-only laptop (Intel i5-8250U, 4 cores / 8 threads, 32 GB RAM, 0.3 GB VRAM)
 - `qwen2.5:7b` (4.7 GB): tool calling works (add 17+25 = 42, shout "done" = DONE). Speed, 2 runs, 64 tokens (Ollama's own timers): generation 3.7 and 4.8 tok/s, prompt processing 5.6 tok/s cold and 183 tok/s warm, first load 8.8 s. That is borderline for chat: fine for short answers, slow for long ones.

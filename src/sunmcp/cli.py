@@ -153,7 +153,8 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("box", help="detect this machine, pick models, optionally write sunmcp.json")
     s.add_argument("--write", action="store_true", help="write the config")
     s.add_argument("--force", action="store_true", help="overwrite an existing config")
-    s.add_argument("--gpu", action="store_true", help="this machine has a real GPU: let Ollama use it")
+    s.add_argument("--gpu", action="store_true", help="let Ollama use the GPU (automatic when an NVIDIA GPU is found)")
+    s.add_argument("--cpu", action="store_true", help="force CPU-only even when a GPU is found")
     s.add_argument("--install", action="store_true", help="also download and set up the models (needs Ollama)")
     s.add_argument("-c", "--config", default="sunmcp.json")
     s = sub.add_parser("thread", help="a loop that works without commands and never blocks on a question")
@@ -174,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "box":
         hw = detect_hardware()
         tier = choose_tier(hw)
-        cpu_only = not args.gpu
+        cpu_only = args.cpu or not (args.gpu or bool(hw.gpu))
         print(report(hw, tier, cpu_only))
         if args.write:
             path = Path(args.config)
