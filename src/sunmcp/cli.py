@@ -12,7 +12,7 @@ import httpx
 
 from . import __version__
 from .agent import run_turn
-from .box import box_config, choose_tier, detect_hardware, report
+from .box import box_config, choose_tier, detect_hardware, modelfiles, report
 from .config import SAMPLE_CONFIG, load_config
 from .hub import MCPHub
 from .llm import make_backend
@@ -110,20 +110,27 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("box", help="detect this machine, pick models, optionally write sunmcp.json")
     s.add_argument("--write", action="store_true", help="write the config")
     s.add_argument("--force", action="store_true", help="overwrite an existing config")
+    s.add_argument("--gpu", action="store_true", help="this machine has a real GPU: let Ollama use it")
     s.add_argument("-c", "--config", default="sunmcp.json")
     args = p.parse_args(argv)
 
     if args.cmd == "box":
         hw = detect_hardware()
         tier = choose_tier(hw)
-        print(report(hw, tier))
+        cpu_only = not args.gpu
+        print(report(hw, tier, cpu_only))
         if args.write:
             path = Path(args.config)
             if path.exists() and not args.force:
                 print(f"{path} already exists (use --force)", file=sys.stderr)
                 return 1
-            path.write_text(json.dumps(box_config(tier), indent=2, ensure_ascii=False), encoding="utf-8")
+            path.write_text(json.dumps(box_config(tier, cpu_only), indent=2, ensure_ascii=False), encoding="utf-8")
             print(f"wrote {path}")
+            if cpu_only:
+                for name, text in modelfiles(tier).items():
+                    mf = path.parent / f"Modelfile.{name}"
+                    mf.write_text(text, encoding="utf-8")
+                    print(f"wrote {mf}")
         return 0
     if args.cmd == "init":
         path = Path(args.config)

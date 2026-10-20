@@ -1,4 +1,4 @@
-from sunmcp.box import Hardware, box_config, choose_tier, detect_hardware, pull_commands
+from sunmcp.box import Hardware, box_config, choose_tier, detect_hardware, modelfiles, pull_commands
 from sunmcp.config import parse_config
 
 
@@ -14,9 +14,16 @@ def test_tiers():
 def test_generated_config_parses():
     t = choose_tier(Hardware(4, 16))
     cfg = parse_config(box_config(t))
-    assert cfg.backend.model == t.chat
-    assert cfg.vision.model == t.vision and cfg.vision.max_side == 768
-    assert pull_commands(t) == [f"ollama pull {t.chat}", f"ollama pull {t.vision}"]
+    assert cfg.backend.model == "sunbox-chat"
+    assert cfg.vision.model == "sunbox-vision" and cfg.vision.max_side == 768
+    cmds = pull_commands(t)
+    assert cmds[:2] == [f"ollama pull {t.chat}", f"ollama pull {t.vision}"]
+    assert any("ollama create sunbox-chat" in c for c in cmds)
+    gpu = parse_config(box_config(t, cpu_only=False))
+    assert gpu.backend.model == t.chat and gpu.vision.model == t.vision
+    assert pull_commands(t, cpu_only=False) == cmds[:2]
+    mf = modelfiles(t)
+    assert mf["sunbox-chat"].startswith(f"FROM {t.chat}") and "num_gpu 0" in mf["sunbox-chat"]
 
 
 def test_detect_hardware_sane():

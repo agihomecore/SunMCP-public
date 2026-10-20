@@ -2,6 +2,9 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## 0.2.6
+- `sunmcp box` now writes CPU-only Ollama Modelfiles (`sunbox-chat`, `sunbox-vision`: `num_gpu 0`, `num_ctx 4096`) and uses them. Measured on a 4C/8T laptop: Ollama's default (24% of layers on a weak iGPU, 8192 context) gave 3 tok/s on qwen2.5:3b; CPU-only gave 10.5 tok/s. `--gpu` keeps the stock models.
+
 ## 0.2.5
 - New `sunmcp box`: detects cores/RAM, picks a tier and models (see docs/HARDWARE.md), prints install commands, `--write` creates sunmcp.json.
 - Tiers use physical cores, not threads (found by running on a 4C/8T laptop).

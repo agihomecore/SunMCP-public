@@ -99,11 +99,30 @@ def choose_tier(hw: Hardware) -> Tier:
     return Tier("Standard", "qwen2.5:3b", "qwen2.5vl:3b", "3B chat (unmeasured speed); vision on command only.")
 
 
-def box_config(tier: Tier) -> dict[str, Any]:
+CHAT_ALIAS = "sunbox-chat"
+VISION_ALIAS = "sunbox-vision"
+
+
+def modelfiles(tier: Tier) -> dict[str, str]:
+    """Ollama Modelfiles for CPU-only machines.
+
+    Measured on a 4C/8T laptop: Ollama's default offloaded 24% of the layers to a
+    weak integrated GPU with an 8192 context and ran qwen2.5:3b at ~3 tok/s;
+    num_gpu 0 with a smaller context ran the same model at ~10.5 tok/s.
+    """
     return {
-        "backend": {"type": "ollama", "model": tier.chat, "base_url": "http://localhost:11434/v1"},
+        CHAT_ALIAS: f"FROM {tier.chat}\nPARAMETER num_gpu 0\nPARAMETER num_ctx 4096\n",
+        VISION_ALIAS: f"FROM {tier.vision}\nPARAMETER num_gpu 0\nPARAMETER num_ctx 4096\n",
+    }
+
+
+def box_config(tier: Tier, cpu_only: bool = True) -> dict[str, Any]:
+    chat = CHAT_ALIAS if cpu_only else tier.chat
+    vision = VISION_ALIAS if cpu_only else tier.vision
+    return {
+        "backend": {"type": "ollama", "model": chat, "base_url": "http://localhost:11434/v1"},
         "vision": {
-            "enabled": True, "model": tier.vision, "base_url": "http://localhost:11434/v1",
+            "enabled": True, "model": vision, "base_url": "http://localhost:11434/v1",
             "tool": True, "max_side": 768, "timeout": 900,
         },
         "system": "You are a helpful assistant. Use the available tools when they help.",
@@ -111,17 +130,21 @@ def box_config(tier: Tier) -> dict[str, Any]:
     }
 
 
-def pull_commands(tier: Tier) -> list[str]:
-    return [f"ollama pull {tier.chat}", f"ollama pull {tier.vision}"]
+def pull_commands(tier: Tier, cpu_only: bool = True) -> list[str]:
+    cmds = [f"ollama pull {tier.chat}", f"ollama pull {tier.vision}"]
+    if cpu_only:
+        cmds += [f"ollama create {n} -f Modelfile.{n}" for n in (CHAT_ALIAS, VISION_ALIAS)]
+    return cmds
 
 
-def report(hw: Hardware, tier: Tier) -> str:
+def report(hw: Hardware, tier: Tier, cpu_only: bool = True) -> str:
     lines = [
         f"machine: {hw.cores} physical cores ({hw.threads or hw.cores} threads), {hw.ram_gb:.1f} GB RAM",
         f"tier:    {tier.name}",
         f"chat:    {tier.chat}",
         f"vision:  {tier.vision} (on command only)",
         f"note:    {tier.note}",
-        "install: " + "; ".join(pull_commands(tier)),
+        "mode:    " + ("CPU only (GPU offload off)" if cpu_only else "GPU allowed"),
+        "install: " + "; ".join(pull_commands(tier, cpu_only)),
     ]
     return "\n".join(lines)

@@ -16,6 +16,8 @@ Status of each number: **measured** (we ran it), **sourced** (public guidance),
 
 ## Measured on a CPU-only laptop (Intel i5-8250U, 4 cores / 8 threads, 32 GB RAM, 0.3 GB VRAM)
 - `qwen2.5:7b` (4.7 GB): tool calling works (add 17+25 = 42, shout "done" = DONE). Speed, 2 runs, 64 tokens (Ollama's own timers): generation 3.7 and 4.8 tok/s, prompt processing 5.6 tok/s cold and 183 tok/s warm, first load 8.8 s. That is borderline for chat: fine for short answers, slow for long ones.
+- **Speed, qwen2.5:3b, same laptop, 64 tokens, temperature 0:** Ollama default (`76%/24% CPU/GPU`, ctx 8192): 3.0 tok/s. Ollama with `num_gpu=0`, ctx 2048: 10.2-10.8 tok/s. llama.cpp `llama-server` b11753 (CPU build, 4 threads, ctx 2048): 10.6 tok/s. Same machine, 3 runs each for Ollama, 2 for llama-server. Conclusion: the engine is not the problem; the default GPU offload on a weak iGPU is. `sunmcp box` therefore ships CPU-only Modelfiles.
+- `qwen2.5:7b` via llama-server (4 threads, ctx 2048): 4.6 tok/s, same as via Ollama (4.7).
 - `qwen2.5vl:3b` (3.2 GB): described the real screen correctly, about 5 minutes per image at 768 px.
 - `qwen2.5vl:7b` (6.0 GB): no answer within 5+ minutes at 768 px. Not usable on this class of machine.
 - `qwen2.5vl` models cannot call tools in Ollama; use a separate tool-capable chat model.
