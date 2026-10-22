@@ -7,7 +7,7 @@ from .thread import GuardedHub, Thread, run_loop, run_step
 from .vision import Vision, attach_vision
 from .llm import AnthropicBackend, Backend, OpenAICompatBackend, ToolCall, Turn, make_backend
 
-__version__ = "0.2.9"
+__version__ = "0.3.0"
 
 __all__ = [
     "AnthropicBackend",

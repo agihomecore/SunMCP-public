@@ -2,6 +2,14 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## 0.3.0
+- New `sunmcp partner`: the tester/reseller programme on SunAPI (docs/PARTNER.md). Key in `$SUNAPI_KEY`, never in the config.
+  - `me` (referral link, points, usage by client), `propose` / `proposals` (ideas and bugs go to the team and come back with an answer), `keys` / `key-add` (client keys to resell SunAPI access), `config` (sunmcp.json that runs on SunAPI models: `sun-moe` = Qwen3.6-35B-A3B, `sun-14b`, `sun-fast`).
+- SunAPI speaks OpenAI tool calls, so the plain `openai` backend works with MCP tools against it.
+
+## 0.2.9
+- `sunmcp box` detects an NVIDIA GPU and uses it; `--cpu` forces CPU-only. Hardware requirement stated: a CPU above average (8+ cores, 32 GB RAM) or an NVIDIA RTX GPU.
+
 ## 0.2.8
 - `sunmcp box --write --install`: also downloads and sets up the models (runs the `ollama pull` / `ollama create` commands itself). If Ollama is missing it says where to get it. A buyer now needs one command after installing the wheels.
 

@@ -168,7 +168,20 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--deny", action="append", default=[], help="extra tool-name glob to block (run)")
     s.add_argument("--allow", action="append", default=[], help="tool-name glob exempt from blocking (run)")
     s.add_argument("--notify", help="command that receives each new question as JSON on stdin (run)")
+    s = sub.add_parser("partner", help="tester/reseller programme on SunAPI (key in $SUNAPI_KEY)")
+    s.add_argument("action", choices=["me", "propose", "proposals", "keys", "key-add", "config"])
+    s.add_argument("text", nargs="*", help="proposal text, or client name for key-add")
+    s.add_argument("--product", default="sunmcp", choices=["sunmcp", "sunapi", "agihome", "other"])
+    s.add_argument("--kind", default="idea", choices=["bug", "idea", "proposal", "question"])
+    s.add_argument("--model", default="sun-moe", help="SunAPI model for `config` (sun-moe | sun-14b | sun-fast)")
+    s.add_argument("--force", action="store_true")
+    s.add_argument("-c", "--config", default="sunmcp.json")
     args = p.parse_args(argv)
+
+    if args.cmd == "partner":
+        from .partner import run as partner_run
+        return partner_run(args.action, args.text, product=args.product, kind=args.kind,
+                           model=args.model, config=args.config, force=args.force)
 
     if args.cmd == "thread" and args.action != "run":
         return _thread_control(args)
