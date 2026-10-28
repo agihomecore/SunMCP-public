@@ -13,7 +13,7 @@ On by default, local, no cloud: Qwen2.5-VL through Ollama.
 
 ```bash
 ollama pull qwen2.5vl:3b
-pip install "sunmcp[screen]"
+pip install "sunmcp[screen] @ git+https://github.com/agihomecore/SunMCP-public.git"
 sunmcp screen "what error is on my screen?"   # by command
 ```
 
@@ -22,10 +22,12 @@ Nothing is captured unless you ask or the model calls the tool. Turn it off with
 
 ## Install
 
+Needs Python 3.10+. There is no PyPI release yet; install straight from GitHub:
+
 ```bash
-pip install sunmcp          # after first PyPI release
+pip install "git+https://github.com/agihomecore/SunMCP-public.git"
 # or from source
-git clone <this repo> && cd sunmcp && pip install -e .
+git clone https://github.com/agihomecore/SunMCP-public && cd SunMCP-public && pip install -e .
 ```
 
 ## 60 seconds
