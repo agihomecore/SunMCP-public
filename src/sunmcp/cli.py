@@ -1,4 +1,4 @@
-"""sunmcp CLI: init | box | tools | run | chat | screen | thread"""
+"""sunmcp CLI: init | box | tools | run | chat | screen | look | thread"""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from .config import SAMPLE_CONFIG, load_config
 from .hub import MCPHub
 from .llm import make_backend
 from .thread import DEFAULT_DENY, Thread, run_loop, shell_notifier
+from .desktop import Desktop, ask_console, attach_desktop
 from .vision import Vision, attach_vision
 
 
@@ -87,11 +88,20 @@ def _thread_control(args: argparse.Namespace) -> int:
     return 0
 
 
+def _look() -> int:
+    """`sunmcp look`: list the active window's controls (works without a config)."""
+    from .desktop import DesktopConfig
+
+    print(Desktop(DesktopConfig(enabled=True)).look())
+    return 0
+
+
 async def _run(config_path: str, prompt: str) -> int:
     cfg = load_config(config_path)
     backend = make_backend(cfg.backend)
     async with MCPHub(cfg.servers) as hub:
         attach_vision(hub, Vision(cfg.vision))
+        attach_desktop(hub, Desktop(cfg.desktop, confirm=ask_console))
         print(await run_turn(backend, hub, [], prompt, cfg.system, on_tool=_print_tool))
     return 0
 
@@ -103,7 +113,9 @@ async def _chat(config_path: str) -> int:
     vision = Vision(cfg.vision)
     async with MCPHub(cfg.servers) as hub:
         attach_vision(hub, vision)
-        print(f"sunmcp {__version__}: {len(hub.tools)} tools. /screen <question>, /reset, /exit.")
+        desktop = Desktop(cfg.desktop, confirm=ask_console)
+        attach_desktop(hub, desktop)
+        print(f"sunmcp {__version__}: {len(hub.tools)} tools. /screen <question>, /look, /reset, /exit.")
         loop = asyncio.get_running_loop()
         while True:
             try:
@@ -116,6 +128,12 @@ async def _chat(config_path: str) -> int:
                 continue
             if line.strip() == "/reset":
                 history.clear()
+                continue
+            if line.strip() == "/look":
+                try:
+                    print(f"ai> {desktop.look()}")
+                except RuntimeError as e:
+                    print(f"ai> {e}")
                 continue
             if line.strip().startswith("/screen"):
                 if not cfg.vision.enabled:
@@ -148,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("question", nargs="?")
     s.add_argument("-m", "--monitor", type=int, default=1)
     s.add_argument("-c", "--config", default="sunmcp.json")
+    sub.add_parser("look", help="list the active window's controls (Windows, read-only, Protocol 007 guard)")
     s = sub.add_parser("init", help="write a sample sunmcp.json")
     s.add_argument("-c", "--config", default="sunmcp.json")
     s = sub.add_parser("box", help="detect this machine, pick models, optionally write sunmcp.json")
@@ -208,6 +227,12 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             return install_models(tier, cpu_only, cwd=str(Path(args.config).resolve().parent))
         return 0
+    if args.cmd == "look":
+        try:
+            return _look()
+        except RuntimeError as e:
+            print(f"error: {e}", file=sys.stderr)
+            return 1
     if args.cmd == "init":
         path = Path(args.config)
         if path.exists():

@@ -2,7 +2,14 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
-## Unreleased (0.3.1)
+## 0.4.0
+- New `sunmcp/desktop.py`: eyes and hands on the Windows desktop through UI Automation (`pip install "sunmcp[desktop]"`).
+  - `desktop_look` ("See"): the active window's title and controls with ids. Reads names only, never field values.
+  - `desktop_type` ("Act"): types into one field. Off by default (`desktop.act`), the human confirms every action, the window must not change between look and type.
+  - Protocol 007 guard, always on: windows of banks, Kaspi, password managers, wallets or with password/secret in the title are neither seen nor touched; password fields are never typed into. Extra words: `desktop.guard_words`.
+- CLI: `sunmcp look`, `/look` in chat. Config section `"desktop": {"enabled": false, "act": false}`.
+
+## 0.3.1
 - `examples/salina_web_server.py`: compact MCP server with `search`, `wiki`, `read_page`. Official APIs only: Brave Search API when `BRAVE_API_KEY` is set, otherwise Wikipedia. Works with mcp SDK 1.x (`FastMCP`) and 2.x (`MCPServer`).
 - README: feature cards; docs/ROADMAP.md (screen "See/Act" with safety rules, desktop bridge, macOS).
 

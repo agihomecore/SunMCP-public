@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .desktop import DesktopConfig
+
 SAMPLE_CONFIG: dict[str, Any] = {
     "backend": {
         "type": "ollama",
@@ -20,6 +22,7 @@ SAMPLE_CONFIG: dict[str, Any] = {
         "base_url": "http://localhost:11434/v1",
         "tool": True,
     },
+    "desktop": {"enabled": False, "act": False},
     "system": "You are a helpful assistant. Use the available tools when they help.",
     "servers": {
         "demo": {"command": "python", "args": ["examples/demo_server.py"]},
@@ -63,6 +66,7 @@ class Config:
     servers: dict[str, ServerConfig] = field(default_factory=dict)
     system: str | None = None
     vision: VisionConfig = field(default_factory=VisionConfig)
+    desktop: DesktopConfig = field(default_factory=DesktopConfig)
 
 
 def parse_config(data: dict[str, Any]) -> Config:
@@ -94,7 +98,18 @@ def parse_config(data: dict[str, Any]) -> Config:
         max_side=int(v.get("max_side", 1024)),
         timeout=float(v.get("timeout", 600)),
     )
-    return Config(backend=backend, servers=servers, system=data.get("system"), vision=vision)
+    dk = data.get("desktop", {})
+    desktop = DesktopConfig(
+        enabled=bool(dk.get("enabled", False)),
+        act=bool(dk.get("act", False)),
+        max_nodes=int(dk.get("max_nodes", 120)),
+        max_depth=int(dk.get("max_depth", 12)),
+        max_text=int(dk.get("max_text", 2000)),
+        guard_words=[str(x) for x in dk.get("guard_words", [])],
+    )
+    return Config(
+        backend=backend, servers=servers, system=data.get("system"), vision=vision, desktop=desktop
+    )
 
 
 def load_dotenv(path: str | Path) -> dict[str, str]:
