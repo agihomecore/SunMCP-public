@@ -17,7 +17,7 @@ try:  # mcp 1.x
 except ModuleNotFoundError:  # mcp 2.x renamed it
     from mcp.server.mcpserver import MCPServer as FastMCP
 
-UA = {"User-Agent": "SalinaBot/1.0 (IP SUN, Astana; contact via sun-agi.com)", "Accept-Language": "ru,kk,en;q=0.8"}
+UA = {"User-Agent": "SalinaBot/1.0 (https://sun-agi.com; IP SUN, Astana) python-httpx", "Accept-Language": "ru,kk,en;q=0.8"}
 mcp = FastMCP("salina-web")
 
 
