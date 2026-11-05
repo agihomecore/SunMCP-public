@@ -2,6 +2,10 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com). Versioning: [SemVer](https://semver.org).
 
+## Unreleased (0.3.1)
+- `examples/salina_web_server.py`: compact MCP server with `search`, `wiki`, `read_page`. Official APIs only: Brave Search API when `BRAVE_API_KEY` is set, otherwise Wikipedia. Works with mcp SDK 1.x (`FastMCP`) and 2.x (`MCPServer`).
+- README: feature cards; docs/ROADMAP.md (screen "See/Act" with safety rules, desktop bridge, macOS).
+
 ## 0.3.0
 - New `sunmcp partner`: the tester/reseller programme on SunAPI (docs/PARTNER.md). Key in `$SUNAPI_KEY`, never in the config.
   - `me` (referral link, points, usage by client), `propose` / `proposals` (ideas and bugs go to the team and come back with an answer), `keys` / `key-add` (client keys to resell SunAPI access), `config` (sunmcp.json that runs on SunAPI models: `sun-moe` = Qwen3.6-35B-A3B, `sun-14b`, `sun-fast`).

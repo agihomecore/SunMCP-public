@@ -5,7 +5,20 @@ Model-agnostic **MCP client**. Connect any [MCP](https://modelcontextprotocol.io
 - Several MCP servers at once (stdio), tools are namespaced as `server__tool`
 - Backends: `ollama`, `lmstudio`, `openai`, `anthropic` (bring your own key)
 - Agent loop with tool-call error recovery and a step limit
-- ~500 lines, no framework, MIT
+- ~1 500 lines, no framework, MIT
+
+## Cards
+
+| | |
+|---|---|
+| **Local first** | Runs on your machine with Ollama (Gemma 4, Qwen). Nothing leaves it unless you pick a cloud backend. |
+| **Any MCP server** | Files, databases, web, your own tools: several servers at once, tools named `server__tool`. |
+| **Any model** | `ollama`, `lmstudio`, `openai`, `anthropic`, or SunAPI. Keys stay in `.env`, referenced by name. |
+| **Sees the screen** | `sunmcp screen` / `/screen`: local vision, nothing captured unless asked. |
+| **Works without commands** | `sunmcp thread`: works toward a goal, logs every step, irreversible tools need your yes. |
+| **Fits the machine** | `sunmcp box`: detects CPU/RAM/GPU and picks models. |
+| **Telegram (Pro)** | Talk to your tools from Telegram, allow-listed chats only. |
+| **Salina** | The assistant built on SunMCP: Telegram bot + memory + `/web` on official search APIs. See `examples/salina_web_server.py` and [docs/ROADMAP.md](docs/ROADMAP.md). |
 
 ## Vision (screenshots)
 
